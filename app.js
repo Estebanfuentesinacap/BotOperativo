@@ -30,7 +30,7 @@ const connection = mysql.createConnection({
 });
 
 const createTable  = () => {     
-  let query = "CREATE TABLE IF NOT EXISTS usuarios (nombre varchar(50), apellidos varchar(50), correo varchar(50), contacto numeric(15) primary key unique);";
+  let query = "CREATE TABLE IF NOT EXISTS usuarios (nombre varchar(50), apellidos varchar(50), correo varchar(50), contacto numeric(15) primary key unique, iteraccion numeric(2), empresa numeric(2), facilidad numeric(2), satisfaccion numeric(2));";
   connection.connect();
   connection.query(query, function (error, results, fields) {
     if (error) {
@@ -49,7 +49,26 @@ const flowProductos = addKeyword([
   "🔗 https://agencyagartha.cl/shop/",
   "",
   "Para volver atras escriba *pppp* ➡",
+  "",
+  "Para terminar ingrese *Terminar*",
 ]);
+
+const flowDespedida = addKeyword([
+  "Terminar",
+  "terminar",
+  
+]).addAnswer("¿Desea responder la encuesta de satisfaccion?",
+{capture: true},
+(ctx, {flowDynamic}) => {
+  val = ctx.body
+  if(val === "si" || val === "Si"){
+    flowDynamic([{body: "Confirme enviando *E1*"}])
+  }
+  else{
+    flowDynamic([{body: "Nos vemos pronto en otra ocasión. ¡Qué tengas un excelente día!"}])
+  }
+})
+
 
 const flowAtencionComercial = addKeyword([
   "Atención",
@@ -63,6 +82,8 @@ const flowAtencionComercial = addKeyword([
   "🔗 https://agencyagartha.cl",
   "",
   "Para volver atras escriba *pppp* ➡",
+  "",
+  "Para terminar ingrese *Terminar*",
 ]);
 
 const flowSoporteTecnico = addKeyword([
@@ -75,6 +96,8 @@ const flowSoporteTecnico = addKeyword([
   "🔗 https://agencyagartha.cl",
   "",
   "Para volver atras escriba *pppp* ➡",
+  "",
+  "Para terminar ingrese *Terminar*",
 ]);
 
 const flowSitioNo = addKeyword(["Nnn", "nnn", "NNN"]).addAnswer(
@@ -83,6 +106,8 @@ const flowSitioNo = addKeyword(["Nnn", "nnn", "NNN"]).addAnswer(
     "🔗 https://agencyagartha.cl",
     "",
     "Para volver atras escriba *pppp* ➡",
+    "",
+    "Para terminar ingrese *Terminar*",
   ],
   { capture: true },
   (ctx, { fallBack }) => {
@@ -97,6 +122,8 @@ const flowseo = addKeyword(["sss", "Sss", "SSS"]).addAnswer([
   "https://agencyagartha.cl/local-seo/",
   "",
   "Escriba *pppp* para volver al menu",
+  "",
+  "Para terminar ingrese *Terminar*",
 ]);
 
 const flowsi = addKeyword(["vvv", "VVVV", "Vvv"]).addAnswer(
@@ -134,6 +161,8 @@ const flowAnalisis = addKeyword([
     "Coloque *VVV*✅ / Coloque *NNN*❌",
     "",
     "Para volver atras escriba *pppp* ➡",
+    "",
+    "Para terminar ingrese *Terminar*",
   ],
   { capture: true },
   (ctx, { fallBack }) => {
@@ -172,6 +201,8 @@ const flowServicios = addKeyword([
   "🔗 https://agencyagartha.cl/our-services/",
   "",
   "Para volver atrás escriba *PPPP* ➡",
+  "",
+  "Para terminar ingrese *Terminar*",
 ]);
 
 const flowEscrito = addKeyword(["PPPP", "Pppp", "pppp"]).addAnswer(
@@ -193,6 +224,8 @@ const flowEscrito = addKeyword(["PPPP", "Pppp", "pppp"]).addAnswer(
     "",
     "Para acceder escriba *Análisis*",
     "👉 Analiza tu página web gratis!",
+    "",
+    "Para salir escriba *Terminar*",
   ],
   null,
   null,
@@ -202,6 +235,7 @@ const flowEscrito = addKeyword(["PPPP", "Pppp", "pppp"]).addAnswer(
     flowSoporteTecnico,
     flowAtencionComercial,
     flowProductos,
+    flowDespedida,
   ]
 );
 
@@ -438,7 +472,7 @@ const flowSaludo = addKeyword([
           if(COUNTER_INTENT2 ===3){
             flowDynamic([{body: 'Te has equivocado demasiadas veces ingrese *c1* nuevamente'}])
           }else{
-            return fallBack("Ingrese correo correcto.")
+            return fallBack("Ingrese correo correcto")
           }
       }
       else{
@@ -457,6 +491,154 @@ const flowSaludo = addKeyword([
           }}
   )
 
+n1 = ["1","2","3","4","5"]
+const flowEncuesta1 = addKeyword("E1","e1")
+.addAnswer("Del 1 al 5 ¿Que tan de acuerdo esta con la iteraccion del bot?",
+{capture: true},
+(ctx, {fallBack, flowDynamic}) => {
+  val = ctx.body
+  vn = false
+  for(i = -1; i < n1.length; i++) {
+    val.lastIndexOf(n1[i])
+
+    if(val.lastIndexOf(n1[i]) != -1){
+      vn = true
+    }
+  }
+
+  if(vn === false){
+    return fallBack( "Ingrese un numero valido del 1 al 5")
+  }
+
+  else{
+    iteraccion = val
+    fono = ctx.from
+    let query = "UPDATE usuarios set iteraccion='"+iteraccion+"' Where contacto='"+fono+"'";
+    console.log(query);
+    connection.query(query, function (error, results, fields) {
+      
+      if (error){
+        throw error; 
+      }
+
+      else{
+        flowDynamic([{body: 'Se ha registrado exitosamente su respuesta ingrese *E2* para continuar'}])
+      }
+
+      }
+    );
+  }
+  }
+)
+
+const flowEncuesta2 = addKeyword("E2","e2")
+.addAnswer("Del 1 al 5 ¿Que te ha parecido la empresa?",
+{capture: true},
+(ctx, {flowDynamic}) => {
+  val = ctx.body
+  vn = false
+  for(i = -1; i < n1.length; i++) {
+    val.lastIndexOf(n1[i])
+    if(val.lastIndexOf(n1[i]) != -1){
+      vn = true
+      }
+  }
+  
+  if(vn === false){
+    flowDynamic([{body: "Ingrese un numero valido del 1 al 5"}])
+  }
+
+  else{    
+    empresa = val
+    fono = ctx.from
+    let query = "UPDATE usuarios set empresa='"+empresa+"' Where contacto='"+fono+"'";
+    console.log(query);
+    connection.query(query, function (error, results, fields) {
+
+      if (error){
+        throw error; 
+      }
+
+      else{
+        flowDynamic([{body: 'Se ha registrado exitosamente su respuesta ingrese *E3* para continuar'}])
+      }
+      }
+    );
+  }
+})
+
+const flowEncuesta3 = addKeyword("E3","e3")
+.addAnswer("¿Del 1 al 5 ¿Que tan facil fue utilizar nuestro Menú?",
+{capture: true},
+(ctx, {flowDynamic}) => {
+  val = ctx.body
+  vn = false
+  for(i = -1; i < n1.length; i++) {
+    val.lastIndexOf(n1[i])
+    if(val.lastIndexOf(n1[i]) != -1){
+      vn = true
+      }
+  }
+  
+  if(vn === false){
+    flowDynamic([{body: "Ingrese un numero valido del 1 al 5"}])
+  }
+
+  else{    
+    facilidad = val
+    fono = ctx.from
+    let query = "UPDATE usuarios set facilidad='"+facilidad+"' Where contacto='"+fono+"'";
+    console.log(query);
+    connection.query(query, function (error, results, fields) {
+
+      if (error){
+        throw error; 
+      }
+
+      else{
+        flowDynamic([{body: 'Se ha registrado exitosamente su respuesta ingrese *E4* para continuar'}])
+      }
+      }
+    );
+  }
+})
+
+const flowEncuesta4 = addKeyword("E4","e4")
+.addAnswer("¿Del 1 al 5 ¿Que tan satisfecho quedo con los servicios?",
+{capture: true},
+(ctx, {flowDynamic}) => {
+  val = ctx.body
+  vn = false
+  for(i = -1; i < n1.length; i++) {
+    val.lastIndexOf(n1[i])
+    if(val.lastIndexOf(n1[i]) != -1){
+      vn = true
+      }
+  }
+  
+  if(vn === false){
+    flowDynamic([{body: "Ingrese un numero valido del 1 al 5"}])
+  }
+
+  else{    
+    satisfaccion = val
+    fono = ctx.from
+    let query = "UPDATE usuarios set satisfaccion='"+satisfaccion+"' Where contacto='"+fono+"'";
+    console.log(query);
+    connection.query(query, function (error, results, fields) {
+
+      if (error){
+        throw error; 
+      }
+
+      else{
+        flowDynamic([{body: 'Te damos las gracias por tomarte el tiempo en responder 😁'}]),
+        flowDynamic([{body: 'Nos vemos pronto en otra ocasión. ¡Qué tengas un excelente día!'}])
+      }
+      }
+    );
+  }
+})
 
 
 const main = async () => {
@@ -478,6 +660,11 @@ const main = async () => {
     flowRegistro1,
     flowRegistro2,
     flowEditarCorreo,
+    flowDespedida,
+    flowEncuesta1,
+    flowEncuesta2,
+    flowEncuesta3,
+    flowEncuesta4,
   ]);
   const adapterProvider = createProvider(BaileysProvider);
   createBot({
